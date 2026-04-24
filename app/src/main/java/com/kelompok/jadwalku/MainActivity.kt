@@ -2,9 +2,9 @@ package com.kelompok.jadwalku
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -14,6 +14,7 @@ class MainActivity : AppCompatActivity() {
         val cardTugas = findViewById<CardView>(R.id.cardTugas)
         val cardPengingat = findViewById<CardView>(R.id.cardPengingat)
         val cardNotifikasi = findViewById<CardView>(R.id.cardNotifikasi)
+        val cardLogout = findViewById<CardView>(R.id.cardLogout)
 
         cardJadwal.setOnClickListener {
             startActivity(Intent(this, TambahJadwalActivity::class.java))
@@ -26,6 +27,17 @@ class MainActivity : AppCompatActivity() {
         }
         cardNotifikasi.setOnClickListener {
             startActivity(Intent(this, NotifikasiActivity::class.java))
+        }
+
+        cardLogout.setOnClickListener {
+            // Hapus sesi login dari SharedPreferences sebelum kembali ke halaman Login
+            getSharedPreferences("SesiLogin", MODE_PRIVATE)
+                .edit()
+                .clear()
+                .apply()
+
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
     }
 }

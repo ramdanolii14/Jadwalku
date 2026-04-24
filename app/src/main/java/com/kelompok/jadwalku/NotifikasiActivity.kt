@@ -1,5 +1,6 @@
 package com.kelompok.jadwalku
 
+import android.content.Context
 import android.database.Cursor
 import android.graphics.Color
 import android.os.Bundle
@@ -14,74 +15,116 @@ import androidx.cardview.widget.CardView
 class NotifikasiActivity : AppCompatActivity() {
 
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var container: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notifikasi)
 
         dbHelper = DatabaseHelper(this)
-        val container = findViewById<LinearLayout>(R.id.containerNotifikasi)
+        container = findViewById(R.id.containerNotifikasi)
 
-        // Tambahan: Memanggil fungsi untuk memunculkan tombol bersihkan
-        tambahTombolBersihkan(container)
-
-        muatNotifikasi(container)
-    }
-
-    // Tambahan: Fungsi untuk membuat tombol "Bersihkan Semua"
-    private fun tambahTombolBersihkan(container: LinearLayout) {
-        val btnBersihkan = Button(this)
-        val params = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        params.gravity = Gravity.END // Posisi di kanan
-        params.setMargins(0, 0, 0, 16.dp)
-        btnBersihkan.layoutParams = params
-        btnBersihkan.text = "Bersihkan Semua"
-        btnBersihkan.setTextColor(Color.RED)
-        btnBersihkan.setBackgroundColor(Color.TRANSPARENT)
-
+        // Tombol "Bersihkan Semua" sudah ada di XML (btnBersihkanSemua), tidak perlu dibuat ulang lewat kode
+        val btnBersihkan = findViewById<Button>(R.id.btnBersihkanSemua)
         btnBersihkan.setOnClickListener {
-            // Mengosongkan seluruh isi container notifikasi
-            container.removeAllViews()
-            // Memunculkan kembali tombol bersihkan agar tidak ikut hilang selamanya
-            tambahTombolBersihkan(container)
+            bersihkanSemuaNotifikasi()
         }
-        container.addView(btnBersihkan)
+
+        muatNotifikasi()
     }
 
-    private fun muatNotifikasi(container: LinearLayout) {
-        // 1. Muat pesan untuk Tugas
-        val cursorTugas: Cursor = dbHelper.getAllTugas()
+    private fun bersihkanSemuaNotifikasi() {
+        val sharedPref = getSharedPreferences("NotifikasiPrefs", Context.MODE_PRIVATE)
+        val clearedIds = sharedPref.getStringSet("cleared_ids", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+
+        val cursorTugas = dbHelper.getAllTugas()
         if (cursorTugas.moveToFirst()) {
             do {
-                val judul = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_JUDUL))
-                val tgl = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TANGGAL_DEADLINE))
-                val wkt = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_DEADLINE))
-
-                val pesan = "Jangan lupa! Tugas '$judul' harus segera diselesaikan sebelum tanggal $tgl pukul $wkt."
-                buatKartuNotifikasi(container, "Peringatan Deadline", pesan)
+                val id = cursorTugas.getInt(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
+                clearedIds.add("tugas_$id")
             } while (cursorTugas.moveToNext())
         }
         cursorTugas.close()
 
-        // 2. Muat pesan untuk Jadwal
-        val cursorJadwal: Cursor = dbHelper.getAllJadwal()
+        val cursorJadwal = dbHelper.getAllJadwal()
         if (cursorJadwal.moveToFirst()) {
             do {
-                val nama = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_NAMA_KEGIATAN))
-                val tgl = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TANGGAL))
-                val wktMulai = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_MULAI))
-
-                val pesan = "Kamu memiliki jadwal '$nama' yang akan dilaksanakan pada $tgl jam $wktMulai."
-                buatKartuNotifikasi(container, "Jadwal Mendatang", pesan)
+                val id = cursorJadwal.getInt(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
+                clearedIds.add("jadwal_$id")
             } while (cursorJadwal.moveToNext())
         }
         cursorJadwal.close()
+
+        sharedPref.edit().putStringSet("cleared_ids", clearedIds).apply()
+
+        // Kosongkan tampilan kartu notifikasi saja (bukan seluruh container termasuk tombol)
+        container.removeAllViews()
+        tampilkanPesanKosong()
     }
 
-    private fun buatKartuNotifikasi(container: LinearLayout, title: String, message: String) {
+    private fun muatNotifikasi() {
+        val sharedPref = getSharedPreferences("NotifikasiPrefs", Context.MODE_PRIVATE)
+        val clearedIds = sharedPref.getStringSet("cleared_ids", mutableSetOf()) ?: mutableSetOf()
+
+        var adaNotifikasi = false
+
+        // 1. Muat notifikasi Tugas
+        val cursorTugas: Cursor = dbHelper.getAllTugas()
+        if (cursorTugas.moveToFirst()) {
+            do {
+                val id = cursorTugas.getInt(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
+                if (!clearedIds.contains("tugas_$id")) {
+                    val judul = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_JUDUL))
+                    val tgl = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TANGGAL_DEADLINE))
+                    val wkt = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_DEADLINE))
+
+                    val pesan = "Jangan lupa! Tugas '$judul' harus segera diselesaikan sebelum tanggal $tgl pukul $wkt."
+                    buatKartuNotifikasi("Peringatan Deadline", pesan)
+                    adaNotifikasi = true
+                }
+            } while (cursorTugas.moveToNext())
+        }
+        cursorTugas.close()
+
+        // 2. Muat notifikasi Jadwal
+        val cursorJadwal: Cursor = dbHelper.getAllJadwal()
+        if (cursorJadwal.moveToFirst()) {
+            do {
+                val id = cursorJadwal.getInt(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
+                if (!clearedIds.contains("jadwal_$id")) {
+                    val nama = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_NAMA_KEGIATAN))
+                    val tgl = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TANGGAL))
+                    val wktMulai = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_MULAI))
+
+                    val pesan = "Kamu memiliki jadwal '$nama' yang akan dilaksanakan pada $tgl jam $wktMulai."
+                    buatKartuNotifikasi("Jadwal Mendatang", pesan)
+                    adaNotifikasi = true
+                }
+            } while (cursorJadwal.moveToNext())
+        }
+        cursorJadwal.close()
+
+        if (!adaNotifikasi) {
+            tampilkanPesanKosong()
+        }
+    }
+
+    private fun tampilkanPesanKosong() {
+        val txtKosong = TextView(this)
+        txtKosong.text = "Tidak ada notifikasi saat ini."
+        txtKosong.textSize = 14f
+        txtKosong.setTextColor(Color.parseColor("#888888"))
+        txtKosong.gravity = Gravity.CENTER
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(0, 48.dp, 0, 0)
+        txtKosong.layoutParams = params
+        container.addView(txtKosong)
+    }
+
+    private fun buatKartuNotifikasi(title: String, message: String) {
         val card = CardView(this)
         val params = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -89,25 +132,21 @@ class NotifikasiActivity : AppCompatActivity() {
         )
         params.setMargins(0, 0, 0, 16.dp)
         card.layoutParams = params
-        card.radius = 16f.dp
-        card.setCardBackgroundColor(Color.parseColor("#EEEEEE")) // Warna abu-abu murni
+        card.setCardBackgroundColor(Color.parseColor("#EEEEEE"))
         card.cardElevation = 0f
 
-        // Layout Horizontal (Kiri: Icon, Kanan: Teks)
         val mainLayout = LinearLayout(this)
         mainLayout.orientation = LinearLayout.HORIZONTAL
         mainLayout.setPadding(20.dp, 20.dp, 20.dp, 20.dp)
         mainLayout.gravity = Gravity.CENTER_VERTICAL
 
-        // Icon Lonceng / Peringatan
         val icon = ImageView(this)
-        icon.setImageResource(android.R.drawable.ic_dialog_info) // Icon bawaan Android
-        icon.setColorFilter(Color.parseColor("#666666")) // Warna icon abu-abu gelap
+        icon.setImageResource(android.R.drawable.ic_dialog_info)
+        icon.setColorFilter(Color.parseColor("#666666"))
         val iconParams = LinearLayout.LayoutParams(40.dp, 40.dp)
         iconParams.setMargins(0, 0, 16.dp, 0)
         icon.layoutParams = iconParams
 
-        // Layout Teks
         val textLayout = LinearLayout(this)
         textLayout.orientation = LinearLayout.VERTICAL
         textLayout.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -133,7 +172,6 @@ class NotifikasiActivity : AppCompatActivity() {
         container.addView(card)
     }
 
-    // Helper konversi DP
     private val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
     private val Float.dp: Float get() = (this * resources.displayMetrics.density)
 }

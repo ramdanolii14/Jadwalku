@@ -6,10 +6,20 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.kelompok.jadwalku.R
+
 class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Cek apakah sesi login masih aktif
+        val sharedPref = getSharedPreferences("SesiLogin", MODE_PRIVATE)
+        val isLoggedIn = sharedPref.getBoolean("is_logged_in", false)
+        if (isLoggedIn) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_login)
 
         val etUserId = findViewById<EditText>(R.id.etUserId)
@@ -24,7 +34,12 @@ class LoginActivity : AppCompatActivity() {
                 val userId = userIdStr.toIntOrNull()
 
                 if (userId != null) {
-                    // Integrasi SQL SELECT * FROM user WHERE id = userId diletakkan di sini nantinya
+                    // Simpan sesi login ke SharedPreferences
+                    sharedPref.edit()
+                        .putBoolean("is_logged_in", true)
+                        .putInt("user_id", userId)
+                        .apply()
+
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finish()

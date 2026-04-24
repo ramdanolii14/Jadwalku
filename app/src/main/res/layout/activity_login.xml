@@ -18,7 +18,7 @@
         android:id="@+id/etUserId"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="User ID"
+        android:hint="User ID (Numerik Only)"
         android:inputType="number"
         android:layout_marginBottom="16dp"/>
 
