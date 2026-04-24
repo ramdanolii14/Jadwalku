@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         cardLogout.setOnClickListener {
-            // Hapus sesi login dari SharedPreferences sebelum kembali ke halaman Login
             getSharedPreferences("SesiLogin", MODE_PRIVATE)
                 .edit()
                 .clear()
