@@ -53,9 +53,9 @@ class TambahJadwalActivity : AppCompatActivity() {
         }
 
         btnSimpan.setOnClickListener {
-            val nama       = etNamaKegiatan.text.toString().trim()
-            val tanggal    = etTanggal.text.toString().trim()
-            val waktuMulai = etWaktuMulai.text.toString().trim()
+            val nama         = etNamaKegiatan.text.toString().trim()
+            val tanggal      = etTanggal.text.toString().trim()
+            val waktuMulai   = etWaktuMulai.text.toString().trim()
             val waktuSelesai = etWaktuSelesai.text.toString().trim()
 
             if (nama.isEmpty() || tanggal.isEmpty() || waktuMulai.isEmpty() || waktuSelesai.isEmpty()) {
@@ -67,42 +67,58 @@ class TambahJadwalActivity : AppCompatActivity() {
             btnSimpan.isEnabled    = false
 
             FirestoreHelper.addJadwal(nama, tanggal, waktuMulai, waktuSelesai) { success, docId ->
-                progressBar.visibility = View.GONE
-                btnSimpan.isEnabled    = true
+                runOnUiThread {
+                    progressBar.visibility = View.GONE
+                    btnSimpan.isEnabled    = true
 
-                if (success && docId != null) {
-                    // Jadwalkan alarm lokal agar notifikasi tetap muncul saat offline
-                    scheduleAlarm(docId, nama, tanggal, waktuMulai)
-                    Toast.makeText(this, "Jadwal berhasil disimpan!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
-                } else {
-                    Toast.makeText(this, "Gagal menyimpan jadwal.", Toast.LENGTH_SHORT).show()
+                    if (success && docId != null) {
+                        scheduleJadwalAlarms(docId, nama, tanggal, waktuMulai)
+                        Toast.makeText(this, "Jadwal berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, MainActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Gagal menyimpan jadwal.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
     }
 
     /**
-     * Menjadwalkan AlarmManager 15 menit sebelum jadwal mulai.
+     * Menjadwalkan 4 alarm lokal sebelum jadwal mulai:
+     * 2 jam, 1 jam, 5 menit, dan 3 menit sebelumnya.
      * Alarm ini bersifat lokal — aktif meski tidak ada koneksi internet.
      */
-    private fun scheduleAlarm(docId: String, nama: String, tanggal: String, waktuMulai: String) {
-        val triggerAt = parseDateTime(tanggal, waktuMulai) - 15 * 60 * 1000L
-        if (triggerAt <= System.currentTimeMillis()) return  // Sudah lewat, skip
-
-        val intent = Intent(this, AlarmReceiver::class.java).apply {
-            putExtra(AlarmReceiver.EXTRA_TITLE, "Jadwal Segera Dimulai")
-            putExtra(AlarmReceiver.EXTRA_MESSAGE, "$nama akan dimulai 15 menit lagi.")
-            putExtra(AlarmReceiver.EXTRA_DOC_ID, docId)
+    private fun scheduleJadwalAlarms(docId: String, nama: String, tanggal: String, waktuMulai: String) {
+        val eventMs = parseDateTime(tanggal, waktuMulai)
+        val offsets = listOf(
+            2 * 60 * 60 * 1000L to "2 jam",
+            60 * 60 * 1000L     to "1 jam",
+            5 * 60 * 1000L      to "5 menit",
+            3 * 60 * 1000L      to "3 menit"
+        )
+        offsets.forEachIndexed { index, (offset, label) ->
+            val triggerAt = eventMs - offset
+            if (triggerAt > System.currentTimeMillis()) {
+                scheduleOneAlarm(
+                    docId     = "${docId}_j$index",
+                    title     = "Jadwal Segera Dimulai",
+                    message   = "$nama akan dimulai $label lagi.",
+                    triggerAt = triggerAt
+                )
+            }
         }
+    }
 
-        // Gunakan hash docId sebagai requestCode agar tiap alarm unik
-        val requestCode = docId.hashCode()
+    private fun scheduleOneAlarm(docId: String, title: String, message: String, triggerAt: Long) {
+        val intent = Intent(this, AlarmReceiver::class.java).apply {
+            putExtra(AlarmReceiver.EXTRA_TITLE,   title)
+            putExtra(AlarmReceiver.EXTRA_MESSAGE, message)
+            putExtra(AlarmReceiver.EXTRA_DOC_ID,  docId)
+        }
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-
-        val pending = PendingIntent.getBroadcast(this, requestCode, intent, flags)
+        val pending = PendingIntent.getBroadcast(this, docId.hashCode(), intent, flags)
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

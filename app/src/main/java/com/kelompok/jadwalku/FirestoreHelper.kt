@@ -39,6 +39,28 @@ object FirestoreHelper {
             .addOnFailureListener { onResult(false, null) }
     }
 
+    fun updateJadwal(
+        docId: String,
+        namaKegiatan: String,
+        tanggal: String,
+        waktuMulai: String,
+        waktuSelesai: String,
+        onResult: (Boolean) -> Unit
+    ) {
+        val uid = currentUid() ?: return onResult(false)
+        val data = mapOf(
+            "nama_kegiatan" to namaKegiatan,
+            "tanggal" to tanggal,
+            "waktu_mulai" to waktuMulai,
+            "waktu_selesai" to waktuSelesai
+        )
+        db.collection("users").document(uid).collection("jadwal")
+            .document(docId)
+            .update(data)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { onResult(false) }
+    }
+
     fun getJadwal(onResult: (List<JadwalItem>) -> Unit) {
         val uid = currentUid() ?: return onResult(emptyList())
         db.collection("users").document(uid).collection("jadwal")
@@ -89,6 +111,28 @@ object FirestoreHelper {
             .add(data)
             .addOnSuccessListener { ref -> onResult(true, ref.id) }
             .addOnFailureListener { onResult(false, null) }
+    }
+
+    fun updateTugas(
+        docId: String,
+        judul: String,
+        deskripsi: String,
+        tanggalDeadline: String,
+        waktuDeadline: String,
+        onResult: (Boolean) -> Unit
+    ) {
+        val uid = currentUid() ?: return onResult(false)
+        val data = mapOf(
+            "judul" to judul,
+            "deskripsi" to deskripsi,
+            "tanggal_deadline" to tanggalDeadline,
+            "waktu_deadline" to waktuDeadline
+        )
+        db.collection("users").document(uid).collection("tugas")
+            .document(docId)
+            .update(data)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { onResult(false) }
     }
 
     fun getTugas(onResult: (List<TugasItem>) -> Unit) {
