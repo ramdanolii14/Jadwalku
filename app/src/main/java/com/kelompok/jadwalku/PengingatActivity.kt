@@ -1,6 +1,5 @@
 package com.kelompok.jadwalku
 
-import android.database.Cursor
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -16,140 +15,104 @@ import java.util.Locale
 
 class PengingatActivity : AppCompatActivity() {
 
-    private lateinit var dbHelper: DatabaseHelper
     private lateinit var container: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pengingat)
 
-        dbHelper = DatabaseHelper(this)
         container = findViewById(R.id.containerPengingat)
-
         refreshData()
-    }
-
-    private fun getTimestamp(tanggal: String, waktu: String): Long {
-        return try {
-            val format = SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault())
-            val date = format.parse("$tanggal $waktu")
-            date?.time ?: 0L
-        } catch (e: Exception) {
-            0L
-        }
     }
 
     private fun refreshData() {
         container.removeAllViews()
 
-        val currentTime = System.currentTimeMillis()
-        val batasKedaluwarsa = 3 * 60 * 60 * 1000L
-        val batasHapus = 48 * 60 * 60 * 1000L
+        val currentTime       = System.currentTimeMillis()
+        val batasKedaluwarsa  = 3 * 60 * 60 * 1000L
+        val batasHapus        = 48 * 60 * 60 * 1000L
 
-        // --- SECTION: JADWAL ---
-        val listJadwal = mutableListOf<Map<String, Any>>()
-        val cursorJadwal: Cursor = dbHelper.getAllJadwal()
-        if (cursorJadwal.moveToFirst()) {
-            do {
-                val id = cursorJadwal.getInt(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
-                val nama = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_NAMA_KEGIATAN))
-                val tgl = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TANGGAL))
-                val wkt = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_MULAI))
-                val wktSelesai = cursorJadwal.getString(cursorJadwal.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_SELESAI))
+        // ── Jadwal dari Firestore ──
+        FirestoreHelper.getJadwal { listJadwal ->
+            val filtered = listJadwal.mapNotNull { item ->
+                val eventTime = getTimestamp(item.tanggal, item.waktuMulai)
+                if (eventTime == 0L) return@mapNotNull item to "AKTIF"
 
-                val eventTime = getTimestamp(tgl, wkt)
-                if (eventTime > 0L) {
-                    val selisih = currentTime - eventTime
-                    if (selisih > batasHapus) {
-                        dbHelper.deleteJadwal(id)
-                        continue
-                    }
-                    val status = when {
-                        selisih > batasKedaluwarsa -> "KEDALUWARSA"
-                        currentTime < eventTime -> "AKTIF"
-                        else -> "BERLANGSUNG"
-                    }
-                    listJadwal.add(mapOf("id" to id, "nama" to nama, "tgl" to tgl, "wkt" to wkt, "wktSelesai" to wktSelesai, "status" to status))
-                } else {
-                    listJadwal.add(mapOf("id" to id, "nama" to nama, "tgl" to tgl, "wkt" to wkt, "wktSelesai" to wktSelesai, "status" to "AKTIF"))
+                val selisih = currentTime - eventTime
+                if (selisih > batasHapus) {
+                    FirestoreHelper.deleteJadwal(item.id)
+                    return@mapNotNull null
                 }
-            } while (cursorJadwal.moveToNext())
-        }
-        cursorJadwal.close()
-
-        // --- SECTION: TUGAS ---
-        val listTugas = mutableListOf<Map<String, Any>>()
-        val cursorTugas: Cursor = dbHelper.getAllTugas()
-        if (cursorTugas.moveToFirst()) {
-            do {
-                val id = cursorTugas.getInt(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
-                val judul = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_JUDUL))
-                val deskripsi = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DESKRIPSI))
-                val tgl = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TANGGAL_DEADLINE))
-                val wkt = cursorTugas.getString(cursorTugas.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WAKTU_DEADLINE))
-
-                val deadlineTime = getTimestamp(tgl, wkt)
-                if (deadlineTime > 0L) {
-                    val selisih = currentTime - deadlineTime
-                    if (selisih > batasHapus) {
-                        dbHelper.deleteTugas(id)
-                        continue
-                    }
-                    val status = when {
-                        selisih > batasKedaluwarsa -> "KEDALUWARSA"
-                        currentTime < deadlineTime -> "AKTIF"
-                        else -> "MENDEKATI"
-                    }
-                    listTugas.add(mapOf("id" to id, "judul" to judul, "deskripsi" to deskripsi, "tgl" to tgl, "wkt" to wkt, "status" to status))
-                } else {
-                    listTugas.add(mapOf("id" to id, "judul" to judul, "deskripsi" to deskripsi, "tgl" to tgl, "wkt" to wkt, "status" to "AKTIF"))
+                val status = when {
+                    selisih > batasKedaluwarsa -> "KEDALUWARSA"
+                    currentTime < eventTime    -> "AKTIF"
+                    else                       -> "BERLANGSUNG"
                 }
-            } while (cursorTugas.moveToNext())
-        }
-        cursorTugas.close()
+                item to status
+            }
 
-        // Render Section Jadwal
-        if (listJadwal.isNotEmpty()) {
-            buatSectionHeader("📅  Jadwal Kegiatan")
-            listJadwal.forEach { item ->
-                buatKartuJadwal(
-                    id = item["id"] as Int,
-                    nama = item["nama"] as String,
-                    tgl = item["tgl"] as String,
-                    wktMulai = item["wkt"] as String,
-                    wktSelesai = item["wktSelesai"] as String,
-                    status = item["status"] as String
-                )
+            runOnUiThread {
+                if (filtered.isNotEmpty()) {
+                    buatSectionHeader("📅  Jadwal Kegiatan")
+                    filtered.forEach { (item, status) ->
+                        buatKartuJadwal(item, status)
+                    }
+                }
             }
         }
 
-        // Render Section Tugas
-        if (listTugas.isNotEmpty()) {
-            buatSectionHeader("📝  Tugas")
-            listTugas.forEach { item ->
-                buatKartuTugas(
-                    id = item["id"] as Int,
-                    judul = item["judul"] as String,
-                    deskripsi = item["deskripsi"] as String,
-                    tgl = item["tgl"] as String,
-                    wkt = item["wkt"] as String,
-                    status = item["status"] as String
-                )
+        // ── Tugas dari Firestore ──
+        FirestoreHelper.getTugas { listTugas ->
+            val filtered = listTugas.mapNotNull { item ->
+                val deadlineTime = getTimestamp(item.tanggalDeadline, item.waktuDeadline)
+                if (deadlineTime == 0L) return@mapNotNull item to "AKTIF"
+
+                val selisih = currentTime - deadlineTime
+                if (selisih > batasHapus) {
+                    FirestoreHelper.deleteTugas(item.id)
+                    return@mapNotNull null
+                }
+                val status = when {
+                    selisih > batasKedaluwarsa  -> "KEDALUWARSA"
+                    currentTime < deadlineTime  -> "AKTIF"
+                    else                        -> "MENDEKATI"
+                }
+                item to status
+            }
+
+            runOnUiThread {
+                if (filtered.isNotEmpty()) {
+                    buatSectionHeader("📝  Tugas")
+                    filtered.forEach { (item, status) ->
+                        buatKartuTugas(item, status)
+                    }
+                }
+
+                // Cek apakah semua kosong (setelah kedua fetch selesai)
+                if (container.childCount == 0) {
+                    tampilkanKosong()
+                }
             }
         }
+    }
 
-        // Tampilkan pesan kosong jika tidak ada data
-        if (listJadwal.isEmpty() && listTugas.isEmpty()) {
-            val txtKosong = TextView(this)
-            txtKosong.text = "Tidak ada pengingat aktif saat ini."
-            txtKosong.textSize = 14f
-            txtKosong.setTextColor(Color.parseColor("#888888"))
-            txtKosong.gravity = Gravity.CENTER
-            val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 64.dp, 0, 0)
-            txtKosong.layoutParams = p
-            container.addView(txtKosong)
-        }
+    private fun tampilkanKosong() {
+        val tv = TextView(this)
+        tv.text = "Tidak ada pengingat aktif saat ini."
+        tv.textSize = 14f
+        tv.setTextColor(Color.parseColor("#888888"))
+        tv.gravity = Gravity.CENTER
+        val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        p.setMargins(0, 64.dp, 0, 0)
+        tv.layoutParams = p
+        container.addView(tv)
+    }
+
+    private fun getTimestamp(tanggal: String, waktu: String): Long {
+        return try {
+            val sdf = SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault())
+            sdf.parse("$tanggal $waktu")?.time ?: 0L
+        } catch (e: Exception) { 0L }
     }
 
     private fun buatSectionHeader(judul: String) {
@@ -164,150 +127,96 @@ class PengingatActivity : AppCompatActivity() {
         container.addView(tv)
     }
 
-    private fun buatKartuJadwal(id: Int, nama: String, tgl: String, wktMulai: String, wktSelesai: String, status: String) {
-        val isExpired = status == "KEDALUWARSA"
+    private fun buatKartuJadwal(item: JadwalItem, status: String) {
+        val isExpired     = status == "KEDALUWARSA"
         val isBerlangsung = status == "BERLANGSUNG"
 
-        val bgColor = when {
-            isExpired -> "#FFF3F3"
-            isBerlangsung -> "#F0FFF4"
-            isBerlangsung -> "#F0FFF4"
-            else -> "#F5F5F5"
-        }
-        val badgeColor = when {
-            isExpired -> "#FF4444"
-            isBerlangsung -> "#00AA55"
-            else -> "#4488FF"
-        }
-        val badgeText = when {
-            isExpired -> "Kedaluwarsa"
-            isBerlangsung -> "Berlangsung"
-            else -> "Mendatang"
-        }
+        val bgColor    = when { isExpired -> "#FFF3F3"; isBerlangsung -> "#F0FFF4"; else -> "#F5F5F5" }
+        val badgeColor = when { isExpired -> "#FF4444"; isBerlangsung -> "#00AA55"; else -> "#4488FF" }
+        val badgeText  = when { isExpired -> "Kedaluwarsa"; isBerlangsung -> "Berlangsung"; else -> "Mendatang" }
 
-        val card = buatCardBase(bgColor)
-        val inner = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20.dp, 16.dp, 20.dp, 16.dp)
-        }
+        val card  = buatCardBase(bgColor)
+        val inner = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(20.dp, 16.dp, 20.dp, 16.dp) }
 
-        // Baris atas: nama + badge
-        val barisTas = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val tvNama = TextView(this).apply {
-            text = nama
-            textSize = 16f
-            setTypeface(null, Typeface.BOLD)
+        val barisTas = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        val tvNama   = TextView(this).apply {
+            text = item.namaKegiatan; textSize = 16f; setTypeface(null, Typeface.BOLD)
             setTextColor(Color.parseColor("#222222"))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
-        val tvBadge = buatBadge(badgeText, badgeColor)
         barisTas.addView(tvNama)
-        barisTas.addView(tvBadge)
+        barisTas.addView(buatBadge(badgeText, badgeColor))
 
-        // Detail waktu
         val tvDetail = TextView(this).apply {
-            text = "📅 $tgl   🕐 $wktMulai – $wktSelesai"
-            textSize = 13f
-            setTextColor(Color.parseColor("#666666"))
+            text = "📅 ${item.tanggal}   🕐 ${item.waktuMulai} – ${item.waktuSelesai}"
+            textSize = 13f; setTextColor(Color.parseColor("#666666"))
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 6.dp, 0, 0)
-            layoutParams = p
+            p.setMargins(0, 6.dp, 0, 0); layoutParams = p
         }
 
-        // Tombol hapus
         val btnHapus = buatTombolHapus()
         btnHapus.setOnClickListener {
-            dbHelper.deleteJadwal(id)
-            refreshData()
-            Toast.makeText(this, "Jadwal berhasil dihapus.", Toast.LENGTH_SHORT).show()
+            FirestoreHelper.deleteJadwal(item.id) { success ->
+                runOnUiThread {
+                    if (success) {
+                        refreshData()
+                        Toast.makeText(this, "Jadwal berhasil dihapus.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
 
-        inner.addView(barisTas)
-        inner.addView(tvDetail)
-        inner.addView(btnHapus)
-        card.addView(inner)
-        container.addView(card)
+        inner.addView(barisTas); inner.addView(tvDetail); inner.addView(btnHapus)
+        card.addView(inner); container.addView(card)
     }
 
-    private fun buatKartuTugas(id: Int, judul: String, deskripsi: String, tgl: String, wkt: String, status: String) {
-        val isExpired = status == "KEDALUWARSA"
+    private fun buatKartuTugas(item: TugasItem, status: String) {
+        val isExpired  = status == "KEDALUWARSA"
         val isMendekati = status == "MENDEKATI"
 
-        val bgColor = when {
-            isExpired -> "#FFF3F3"
-            isMendekati -> "#FFFBF0"
-            else -> "#F5F5F5"
-        }
-        val badgeColor = when {
-            isExpired -> "#FF4444"
-            isMendekati -> "#FF8800"
-            else -> "#4488FF"
-        }
-        val badgeText = when {
-            isExpired -> "Kedaluwarsa"
-            isMendekati -> "Segera!"
-            else -> "Aktif"
-        }
+        val bgColor    = when { isExpired -> "#FFF3F3"; isMendekati -> "#FFFBF0"; else -> "#F5F5F5" }
+        val badgeColor = when { isExpired -> "#FF4444"; isMendekati -> "#FF8800"; else -> "#4488FF" }
+        val badgeText  = when { isExpired -> "Kedaluwarsa"; isMendekati -> "Segera!"; else -> "Aktif" }
 
-        val card = buatCardBase(bgColor)
-        val inner = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20.dp, 16.dp, 20.dp, 16.dp)
-        }
+        val card  = buatCardBase(bgColor)
+        val inner = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(20.dp, 16.dp, 20.dp, 16.dp) }
 
-        // Baris atas: judul + badge
-        val barisTas = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val tvJudul = TextView(this).apply {
-            text = judul
-            textSize = 16f
-            setTypeface(null, Typeface.BOLD)
+        val barisTas = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        val tvJudul  = TextView(this).apply {
+            text = item.judul; textSize = 16f; setTypeface(null, Typeface.BOLD)
             setTextColor(Color.parseColor("#222222"))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
-        val tvBadge = buatBadge(badgeText, badgeColor)
         barisTas.addView(tvJudul)
-        barisTas.addView(tvBadge)
+        barisTas.addView(buatBadge(badgeText, badgeColor))
 
-        // Deskripsi
         val tvDeskripsi = TextView(this).apply {
-            text = deskripsi
-            textSize = 13f
-            setTextColor(Color.parseColor("#555555"))
+            text = item.deskripsi; textSize = 13f; setTextColor(Color.parseColor("#555555"))
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 4.dp, 0, 0)
-            layoutParams = p
+            p.setMargins(0, 4.dp, 0, 0); layoutParams = p
         }
-
-        // Detail deadline
         val tvDeadline = TextView(this).apply {
-            text = "⏰ Deadline: $tgl pukul $wkt"
+            text = "⏰ Deadline: ${item.tanggalDeadline} pukul ${item.waktuDeadline}"
             textSize = 13f
             setTextColor(if (isExpired) Color.parseColor("#CC0000") else Color.parseColor("#666666"))
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 6.dp, 0, 0)
-            layoutParams = p
+            p.setMargins(0, 6.dp, 0, 0); layoutParams = p
         }
 
-        // Tombol hapus
         val btnHapus = buatTombolHapus()
         btnHapus.setOnClickListener {
-            dbHelper.deleteTugas(id)
-            refreshData()
-            Toast.makeText(this, "Tugas berhasil dihapus.", Toast.LENGTH_SHORT).show()
+            FirestoreHelper.deleteTugas(item.id) { success ->
+                runOnUiThread {
+                    if (success) {
+                        refreshData()
+                        Toast.makeText(this, "Tugas berhasil dihapus.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
 
-        inner.addView(barisTas)
-        inner.addView(tvDeskripsi)
-        inner.addView(tvDeadline)
-        inner.addView(btnHapus)
-        card.addView(inner)
-        container.addView(card)
+        inner.addView(barisTas); inner.addView(tvDeskripsi); inner.addView(tvDeadline); inner.addView(btnHapus)
+        card.addView(inner); container.addView(card)
     }
 
     private fun buatCardBase(bgColorHex: String): CardView {
@@ -322,33 +231,25 @@ class PengingatActivity : AppCompatActivity() {
 
     private fun buatBadge(text: String, colorHex: String): TextView {
         return TextView(this).apply {
-            this.text = text
-            textSize = 11f
-            setTypeface(null, Typeface.BOLD)
+            this.text = text; textSize = 11f; setTypeface(null, Typeface.BOLD)
             setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor(colorHex))
-            setPadding(10.dp, 4.dp, 10.dp, 4.dp)
-            // Rounded badge menggunakan background drawable sederhana
             background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(Color.parseColor(colorHex))
-                cornerRadius = 20f.dp
+                setColor(Color.parseColor(colorHex)); cornerRadius = 20f.dp
             }
+            setPadding(10.dp, 4.dp, 10.dp, 4.dp)
         }
     }
 
     private fun buatTombolHapus(): Button {
         return Button(this).apply {
-            text = "Hapus"
-            textSize = 12f
+            text = "Hapus"; textSize = 12f
             setTextColor(Color.parseColor("#FF4444"))
             setBackgroundColor(Color.TRANSPARENT)
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.gravity = Gravity.END
-            p.setMargins(0, 4.dp, 0, 0)
-            layoutParams = p
+            p.gravity = Gravity.END; p.setMargins(0, 4.dp, 0, 0); layoutParams = p
         }
     }
 
-    private val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
+    private val Int.dp: Int     get() = (this * resources.displayMetrics.density).toInt()
     private val Float.dp: Float get() = (this * resources.displayMetrics.density)
 }

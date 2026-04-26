@@ -4,17 +4,19 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val cardJadwal = findViewById<CardView>(R.id.cardJadwal)
-        val cardTugas = findViewById<CardView>(R.id.cardTugas)
-        val cardPengingat = findViewById<CardView>(R.id.cardPengingat)
+        val cardJadwal     = findViewById<CardView>(R.id.cardJadwal)
+        val cardTugas      = findViewById<CardView>(R.id.cardTugas)
+        val cardPengingat  = findViewById<CardView>(R.id.cardPengingat)
         val cardNotifikasi = findViewById<CardView>(R.id.cardNotifikasi)
-        val cardLogout = findViewById<CardView>(R.id.cardLogout)
+        val cardLogout     = findViewById<CardView>(R.id.cardLogout)
 
         cardJadwal.setOnClickListener {
             startActivity(Intent(this, TambahJadwalActivity::class.java))
@@ -28,13 +30,8 @@ class MainActivity : AppCompatActivity() {
         cardNotifikasi.setOnClickListener {
             startActivity(Intent(this, NotifikasiActivity::class.java))
         }
-
         cardLogout.setOnClickListener {
-            getSharedPreferences("SesiLogin", MODE_PRIVATE)
-                .edit()
-                .clear()
-                .apply()
-
+            FirebaseAuth.getInstance().signOut()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }

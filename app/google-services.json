@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109470349441",
+    "project_id": "jadwalkuapp",
+    "storage_bucket": "jadwalkuapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109470349441:android:2580c292fb90752805b580",
+        "android_client_info": {
+          "package_name": "com.kelompok.jadwalku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0huxK7ib6CSvXLkjyKDSQ9QBx722h0Nw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
