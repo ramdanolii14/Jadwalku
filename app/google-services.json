@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "109470349441",
+    "project_id": "jadwalkuapp",
+    "storage_bucket": "jadwalkuapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109470349441:android:2580c292fb90752805b580",
+        "android_client_info": {
+          "package_name": "com.kelompok.jadwalku"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "109470349441-rmi1ts8hf4o641bkgpl4271aqql55v3b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kelompok.jadwalku",
+            "certificate_hash": "2990dcee1f1a67f45ce7421aea66b0bcd5f22848"
+          }
+        },
+        {
+          "client_id": "109470349441-cv8cg3pahmuflhtvi9kg488hfpkrjc4g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0huxK7ib6CSvXLkjyKDSQ9QBx722h0Nw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "109470349441-cv8cg3pahmuflhtvi9kg488hfpkrjc4g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -33,14 +33,14 @@ class TambahTugasActivity : AppCompatActivity() {
 
         etDeadline.setOnClickListener {
             val cal = Calendar.getInstance()
-            DatePickerDialog(this, { _, year, month, day ->
+            DatePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, year, month, day ->
                 etDeadline.setText("$day/${month + 1}/$year")
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
         etWaktu.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, { _, hour, minute ->
+            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, hour, minute ->
                 etWaktu.setText(String.format("%02d:%02d", hour, minute))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }

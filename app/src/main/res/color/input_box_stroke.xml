@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Letakkan file ini di: res/color/input_box_stroke.xml
+    Digunakan oleh style TextInputLayout di themes.xml
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Saat error -->
+    <item android:color="#B00020" android:state_activated="true" />
+    <!-- Saat fokus → biru -->
+    <item android:color="@color/input_stroke_focused" android:state_focused="true" />
+    <!-- Saat hover -->
+    <item android:color="#777777" android:state_hovered="true" />
+    <!-- Default → abu-abu -->
+    <item android:color="@color/input_stroke_default" />
+</selector>

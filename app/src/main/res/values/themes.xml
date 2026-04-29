@@ -1,16 +1,38 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.Jadwalku" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">#FFFFFF</item>
-        <item name="colorPrimaryVariant">#FFFFFF</item>
-        <item name="colorOnPrimary">#000000</item>
+        <!-- Primary brand color (diubah ke biru agar outline fokus terlihat) -->
+        <item name="colorPrimary">@color/brand_blue</item>
+        <item name="colorPrimaryVariant">@color/brand_blue_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">#EEEEEE</item>
         <item name="colorSecondaryVariant">#DDDDDD</item>
         <item name="colorOnSecondary">#000000</item>
-        <!-- Status bar color. -->
+        <!-- Status bar tetap putih -->
         <item name="android:statusBarColor">#FFFFFF</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <!-- Control colors: default abu-abu, fokus/aktif biru -->
+        <item name="colorControlNormal">@color/input_stroke_default</item>
+        <item name="colorControlActivated">@color/brand_blue</item>
+        <item name="colorControlHighlight">@color/brand_blue</item>
+        <!-- Terapkan custom style ke semua TextInputLayout di app -->
+        <item name="textInputStyle">@style/Widget.Jadwalku.TextInputLayout.OutlinedBox</item>
+    </style>
+
+    <!--
+        Custom OutlinedBox style:
+        - boxStrokeColor  : abu-abu saat normal, biru saat fokus, merah saat error
+        - hintTextColor   : biru saat fokus (label mengapung di atas field)
+        - boxCornerRadius : sudut sedikit membulat agar lebih modern
+    -->
+    <style name="Widget.Jadwalku.TextInputLayout.OutlinedBox"
+        parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/input_box_stroke</item>
+        <item name="hintTextColor">@color/brand_blue</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
     </style>
 </resources>

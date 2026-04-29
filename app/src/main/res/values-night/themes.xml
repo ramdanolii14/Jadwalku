@@ -12,5 +12,9 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">#FFFFFF</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <!-- Outline TextInputLayout: default abu-abu, fokus hitam -->
+        <item name="colorControlNormal">#AAAAAA</item>
+        <item name="colorControlActivated">#000000</item>
+        <item name="colorControlHighlight">#000000</item>
     </style>
 </resources>

@@ -134,19 +134,19 @@ class PengingatActivity : AppCompatActivity() {
 
         etTanggal.setOnClickListener {
             val cal = Calendar.getInstance()
-            DatePickerDialog(this, { _, y, m, d ->
+            DatePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, y, m, d ->
                 etTanggal.setText("$d/${m + 1}/$y")
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
         etWaktuMulai.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, { _, h, min ->
+            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, h, min ->
                 etWaktuMulai.setText(String.format("%02d:%02d", h, min))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
         etWaktuSelesai.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, { _, h, min ->
+            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, h, min ->
                 etWaktuSelesai.setText(String.format("%02d:%02d", h, min))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
@@ -220,13 +220,13 @@ class PengingatActivity : AppCompatActivity() {
 
         etTanggal.setOnClickListener {
             val cal = Calendar.getInstance()
-            DatePickerDialog(this, { _, y, m, d ->
+            DatePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, y, m, d ->
                 etTanggal.setText("$d/${m + 1}/$y")
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
         etWaktu.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, { _, h, min ->
+            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, h, min ->
                 etWaktu.setText(String.format("%02d:%02d", h, min))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
