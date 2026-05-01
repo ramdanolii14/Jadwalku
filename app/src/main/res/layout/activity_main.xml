@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#EEEEEE"
+    android:background="?attr/colorBgScreen"
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -11,8 +11,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Halo, User"
-        android:textColor="#333333"
+        android:text="@string/main_greeting"
+        android:textColor="?attr/colorTextPrimary"
         android:textSize="28sp"
         android:textStyle="bold" />
 
@@ -20,8 +20,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Banyak Tugas Hari ini?\nKapan mainnya kalo banyak tugas begini :("
-        android:textColor="#666666"
+        android:text="@string/main_subtitle"
+        android:textColor="?attr/colorTextSecondary"
         android:textSize="16sp" />
 
     <LinearLayout
@@ -30,12 +30,13 @@
         android:layout_marginTop="40dp"
         android:orientation="vertical">
 
+        <!-- Card Jadwal -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardJadwal"
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#DCDCDC"
+            app:cardBackgroundColor="?attr/colorBgCard"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -49,19 +50,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="Jadwal"
-                    android:textColor="#444444"
+                    android:text="@string/menu_jadwal"
+                    android:textColor="?attr/colorTextOnCard"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Card Tugas -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardTugas"
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#DCDCDC"
+            app:cardBackgroundColor="?attr/colorBgCard"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -75,19 +77,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="Tugas"
-                    android:textColor="#444444"
+                    android:text="@string/menu_tugas"
+                    android:textColor="?attr/colorTextOnCard"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Card Pengingat -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPengingat"
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#DCDCDC"
+            app:cardBackgroundColor="?attr/colorBgCard"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -101,19 +104,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="Pengingat"
-                    android:textColor="#444444"
+                    android:text="@string/menu_pengingat"
+                    android:textColor="?attr/colorTextOnCard"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Card Notifikasi -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardNotifikasi"
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:layout_marginBottom="30dp"
-            app:cardBackgroundColor="#DCDCDC"
+            app:cardBackgroundColor="?attr/colorBgCard"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -127,19 +131,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="Notifikasi"
-                    android:textColor="#444444"
+                    android:text="@string/menu_notifikasi"
+                    android:textColor="?attr/colorTextOnCard"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Card Logout (warna merah tetap, teks putih agar terbaca di kedua mode) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardLogout"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#FF0000"
+            app:cardBackgroundColor="@color/brand_red"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -153,8 +158,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="Logout"
-                    android:textColor="#444444"
+                    android:text="@string/menu_logout"
+                    android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>

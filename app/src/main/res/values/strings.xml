@@ -1,3 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App -->
     <string name="app_name">Jadwalku</string>
+
+    <!-- MainActivity -->
+    <string name="main_greeting">Halo, User</string>
+    <string name="main_subtitle">Banyak Tugas Hari ini?\nKapan mainnya kalo banyak tugas begini :(</string>
+    <string name="menu_jadwal">Jadwal</string>
+    <string name="menu_tugas">Tugas</string>
+    <string name="menu_pengingat">Pengingat</string>
+    <string name="menu_notifikasi">Notifikasi</string>
+    <string name="menu_logout">Logout</string>
+
+    <!-- LoginActivity -->
+    <string name="login_title">Jadwalku</string>
+    <string name="login_subtitle">Halaman Login</string>
+    <string name="login_hint_email">Email</string>
+    <string name="login_hint_password">Password</string>
+    <string name="login_btn_masuk">Masuk</string>
+    <string name="login_btn_daftar">Daftar Akun Baru</string>
+    <string name="login_toggle_to_register">Belum punya akun? Daftar di sini</string>
+    <string name="login_toggle_to_login">Sudah punya akun? Masuk di sini</string>
+
+    <!-- TambahJadwalActivity -->
+    <string name="jadwal_label_nama">Nama Kegiatan</string>
+    <string name="jadwal_label_tanggal">Tanggal Kegiatan</string>
+    <string name="jadwal_label_mulai">Waktu Mulai</string>
+    <string name="jadwal_label_selesai">Waktu Selesai</string>
+    <string name="jadwal_btn_simpan">Simpan</string>
+    <string name="jadwal_toast_kosong">Semua data harus diisi</string>
+    <string name="jadwal_toast_berhasil">Jadwal berhasil disimpan!</string>
+    <string name="jadwal_toast_gagal">Gagal menyimpan jadwal.</string>
+
+    <!-- TambahTugasActivity -->
+    <string name="tugas_label_judul">Judul Tugas</string>
+    <string name="tugas_hint_judul">Masukkan judul tugas</string>
+    <string name="tugas_label_deskripsi">Deskripsi Tugas</string>
+    <string name="tugas_hint_deskripsi">Masukkan deskripsi singkat</string>
+    <string name="tugas_label_deadline">Deadline</string>
+    <string name="tugas_hint_deadline">Pilih Tanggal</string>
+    <string name="tugas_label_waktu">Waktu Deadline</string>
+    <string name="tugas_hint_waktu">00:00</string>
+    <string name="tugas_btn_simpan">Simpan Tugas</string>
+    <string name="tugas_toast_kosong">Semua data harus diisi</string>
+    <string name="tugas_toast_berhasil">Tugas berhasil disimpan!</string>
+    <string name="tugas_toast_gagal">Gagal menyimpan tugas.</string>
+
+    <!-- NotifikasiActivity -->
+    <string name="notif_title">Notifikasi</string>
+    <string name="notif_btn_bersihkan">Bersihkan Semua</string>
+    <string name="notif_kosong">Tidak ada notifikasi saat ini.</string>
+    <string name="notif_card_deadline">Peringatan Deadline</string>
+    <string name="notif_card_jadwal">Jadwal Mendatang</string>
+
+    <!-- PengingatActivity -->
+    <string name="pengingat_title">Daftar Pengingat</string>
+
+    <!-- Pesan kartu notifikasi (format string) -->
+    <!--  %1$s = judul/nama, %2$s = tanggal, %3$s = waktu -->
+    <string name="notif_msg_tugas">Jangan lupa! Tugas \'%1$s\' harus diselesaikan sebelum %2$s pukul %3$s.</string>
+    <string name="notif_msg_jadwal">Kamu memiliki jadwal \'%1$s\' yang akan dilaksanakan pada %2$s jam %3$s.</string>
+
+    <!-- Alarm / Notifikasi sistem -->
+    <string name="alarm_channel_name">Pengingat Jadwal &amp; Tugas</string>
+    <string name="alarm_channel_desc">Notifikasi pengingat jadwal dan deadline tugas</string>
+    <string name="alarm_default_title">Pengingat Jadwalku</string>
+    <string name="alarm_jadwal_title">Jadwal Segera Dimulai</string>
+    <string name="alarm_tugas_title">Deadline Tugas Mendekat!</string>
 </resources>

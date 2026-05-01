@@ -1,8 +1,9 @@
 package com.kelompok.jadwalku
 
 import android.content.Context
-import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.Gravity
 import android.widget.Button
 import android.widget.ImageView
@@ -27,9 +28,21 @@ class NotifikasiActivity : AppCompatActivity() {
         muatNotifikasi()
     }
 
+    // ── Helpers: ambil warna dari theme ──────────────────────────────────────
+
+    /** Ambil warna dari attribute theme (misalnya R.attr.colorBgCard). */
+    private fun themeColor(attrRes: Int): Int {
+        val tv = TypedValue()
+        theme.resolveAttribute(attrRes, tv, true)
+        return tv.data
+    }
+
+    // ── Logika notifikasi ─────────────────────────────────────────────────────
+
     private fun bersihkanSemuaNotifikasi() {
         val sharedPref = getSharedPreferences("NotifikasiPrefs", Context.MODE_PRIVATE)
-        val clearedIds = sharedPref.getStringSet("cleared_ids", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+        val clearedIds = sharedPref.getStringSet("cleared_ids", mutableSetOf())?.toMutableSet()
+            ?: mutableSetOf()
 
         FirestoreHelper.getTugas { listTugas ->
             listTugas.forEach { clearedIds.add("tugas_${it.id}") }
@@ -55,16 +68,22 @@ class NotifikasiActivity : AppCompatActivity() {
 
                     listTugas.forEach { item ->
                         if (!clearedIds.contains("tugas_${item.id}")) {
-                            val pesan = "Jangan lupa! Tugas '${item.judul}' harus diselesaikan sebelum ${item.tanggalDeadline} pukul ${item.waktuDeadline}."
-                            buatKartuNotifikasi("Peringatan Deadline", pesan)
+                            val pesan = getString(
+                                R.string.notif_msg_tugas,
+                                item.judul, item.tanggalDeadline, item.waktuDeadline
+                            )
+                            buatKartuNotifikasi(getString(R.string.notif_card_deadline), pesan)
                             adaNotifikasi = true
                         }
                     }
 
                     listJadwal.forEach { item ->
                         if (!clearedIds.contains("jadwal_${item.id}")) {
-                            val pesan = "Kamu memiliki jadwal '${item.namaKegiatan}' yang akan dilaksanakan pada ${item.tanggal} jam ${item.waktuMulai}."
-                            buatKartuNotifikasi("Jadwal Mendatang", pesan)
+                            val pesan = getString(
+                                R.string.notif_msg_jadwal,
+                                item.namaKegiatan, item.tanggal, item.waktuMulai
+                            )
+                            buatKartuNotifikasi(getString(R.string.notif_card_jadwal), pesan)
                             adaNotifikasi = true
                         }
                     }
@@ -75,24 +94,36 @@ class NotifikasiActivity : AppCompatActivity() {
         }
     }
 
+    // ── View builders ─────────────────────────────────────────────────────────
+
     private fun tampilkanPesanKosong() {
         val tv = TextView(this)
-        tv.text = "Tidak ada notifikasi saat ini."
+        tv.text = getString(R.string.notif_kosong)
         tv.textSize = 14f
-        tv.setTextColor(Color.parseColor("#888888"))
+        tv.setTextColor(themeColor(R.attr.colorTextSecondary))
         tv.gravity = Gravity.CENTER
-        val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
         params.setMargins(0, 48.dp, 0, 0)
         tv.layoutParams = params
         container.addView(tv)
     }
 
     private fun buatKartuNotifikasi(title: String, message: String) {
+        val bgCard    = themeColor(R.attr.colorBgCard)
+        val textPrim  = themeColor(R.attr.colorTextPrimary)
+        val textSec   = themeColor(R.attr.colorTextSecondary)
+
         val card = CardView(this)
-        val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
         params.setMargins(0, 0, 0, 16.dp)
         card.layoutParams = params
-        card.setCardBackgroundColor(Color.parseColor("#EEEEEE"))
+        card.setCardBackgroundColor(bgCard)
         card.cardElevation = 0f
 
         val mainLayout = LinearLayout(this).apply {
@@ -103,7 +134,7 @@ class NotifikasiActivity : AppCompatActivity() {
 
         val icon = ImageView(this)
         icon.setImageResource(android.R.drawable.ic_dialog_info)
-        icon.setColorFilter(Color.parseColor("#666666"))
+        icon.setColorFilter(textSec)
         val iconParams = LinearLayout.LayoutParams(40.dp, 40.dp)
         iconParams.setMargins(0, 0, 16.dp, 0)
         icon.layoutParams = iconParams
@@ -114,11 +145,15 @@ class NotifikasiActivity : AppCompatActivity() {
         }
 
         val txtTitle = TextView(this).apply {
-            text = title; textSize = 16f; setTextColor(Color.BLACK)
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            text = title
+            textSize = 16f
+            setTextColor(textPrim)
+            setTypeface(null, Typeface.BOLD)
         }
         val txtMessage = TextView(this).apply {
-            text = message; textSize = 14f; setTextColor(Color.parseColor("#444444"))
+            text = message
+            textSize = 14f
+            setTextColor(textSec)
             setPadding(0, 4.dp, 0, 0)
         }
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Background -->
+    <attr name="colorBgScreen"   format="color" />
+    <attr name="colorBgSurface"  format="color" />
+    <attr name="colorBgCard"     format="color" />
+    <attr name="colorBgInput"    format="color" />
+
+    <!-- Text -->
+    <attr name="colorTextPrimary"   format="color" />
+    <attr name="colorTextSecondary" format="color" />
+    <attr name="colorTextHint"      format="color" />
+    <attr name="colorTextOnCard"    format="color" />
+
+    <!-- Input -->
+    <attr name="colorInputStroke" format="color" />
+</resources>

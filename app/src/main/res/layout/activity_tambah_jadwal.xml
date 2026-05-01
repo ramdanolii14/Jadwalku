@@ -2,15 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="?attr/colorBgSurface"
     android:orientation="vertical"
     android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nama Kegiatan"
-        android:textColor="#000000"
+        android:text="@string/jadwal_label_nama"
+        android:textColor="?attr/colorTextPrimary"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -20,14 +20,16 @@
         android:layout_height="50dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:background="#EEEEEE"
+        android:background="?attr/colorBgInput"
+        android:textColor="?attr/colorTextPrimary"
+        android:textColorHint="?attr/colorTextHint"
         android:paddingHorizontal="16dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tanggal Kegiatan"
-        android:textColor="#000000"
+        android:text="@string/jadwal_label_tanggal"
+        android:textColor="?attr/colorTextPrimary"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -37,7 +39,9 @@
         android:layout_height="50dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:background="#EEEEEE"
+        android:background="?attr/colorBgInput"
+        android:textColor="?attr/colorTextPrimary"
+        android:textColorHint="?attr/colorTextHint"
         android:clickable="true"
         android:focusable="false"
         android:paddingHorizontal="16dp" />
@@ -45,8 +49,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Waktu Mulai"
-        android:textColor="#000000"
+        android:text="@string/jadwal_label_mulai"
+        android:textColor="?attr/colorTextPrimary"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -56,7 +60,9 @@
         android:layout_height="50dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:background="#EEEEEE"
+        android:background="?attr/colorBgInput"
+        android:textColor="?attr/colorTextPrimary"
+        android:textColorHint="?attr/colorTextHint"
         android:clickable="true"
         android:focusable="false"
         android:paddingHorizontal="16dp" />
@@ -64,8 +70,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Waktu Selesai"
-        android:textColor="#000000"
+        android:text="@string/jadwal_label_selesai"
+        android:textColor="?attr/colorTextPrimary"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -75,7 +81,9 @@
         android:layout_height="50dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="32dp"
-        android:background="#EEEEEE"
+        android:background="?attr/colorBgInput"
+        android:textColor="?attr/colorTextPrimary"
+        android:textColorHint="?attr/colorTextHint"
         android:clickable="true"
         android:focusable="false"
         android:paddingHorizontal="16dp" />
@@ -84,9 +92,9 @@
         android:id="@+id/btnSimpanKalender"
         android:layout_width="match_parent"
         android:layout_height="55dp"
-        android:backgroundTint="#DDDDDD"
-        android:text="Simpan"
-        android:textColor="#000000"
+        android:backgroundTint="?attr/colorBgCard"
+        android:text="@string/jadwal_btn_simpan"
+        android:textColor="?attr/colorTextPrimary"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -96,7 +104,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="16dp"
-        android:indeterminateTint="#888888"
+        android:indeterminateTint="?attr/colorTextSecondary"
         android:visibility="gone" />
 
 </LinearLayout>

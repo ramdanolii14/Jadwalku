@@ -1,20 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/values-night/themes.xml  →  MODE GELAP (Dark)
+    Android memilih file ini otomatis saat device dalam dark mode.
+    Hanya override atribut yang berbeda; sisanya diwarisi dari values/themes.xml.
+-->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
     <style name="Theme.Jadwalku" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">#FFFFFF</item>
-        <item name="colorPrimaryVariant">#FFFFFF</item>
-        <item name="colorOnPrimary">#000000</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">#EEEEEE</item>
-        <item name="colorSecondaryVariant">#DDDDDD</item>
-        <item name="colorOnSecondary">#000000</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">#FFFFFF</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-        <!-- Outline TextInputLayout: default abu-abu, fokus hitam -->
-        <item name="colorControlNormal">#AAAAAA</item>
-        <item name="colorControlActivated">#000000</item>
-        <item name="colorControlHighlight">#000000</item>
+
+        <!-- Brand color -->
+        <item name="colorPrimary">@color/brand_blue</item>
+        <item name="colorPrimaryVariant">@color/brand_blue_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/dark_bg_card</item>
+        <item name="colorSecondaryVariant">@color/dark_bg_input</item>
+        <item name="colorOnSecondary">@color/dark_text_primary</item>
+
+        <!-- Status bar gelap -->
+        <item name="android:statusBarColor">@color/dark_bg_screen</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+
+        <!-- Input control colors (dark) -->
+        <item name="colorControlNormal">@color/dark_input_stroke</item>
+        <item name="colorControlActivated">@color/brand_blue</item>
+        <item name="colorControlHighlight">@color/brand_blue</item>
+        <item name="textInputStyle">@style/Widget.Jadwalku.TextInputLayout.OutlinedBox</item>
+
+        <!-- ── Custom semantic color attributes (dark values) ── -->
+        <!-- Background -->
+        <item name="colorBgScreen">@color/dark_bg_screen</item>
+        <item name="colorBgSurface">@color/dark_bg_surface</item>
+        <item name="colorBgCard">@color/dark_bg_card</item>
+        <item name="colorBgInput">@color/dark_bg_input</item>
+
+        <!-- Text -->
+        <item name="colorTextPrimary">@color/dark_text_primary</item>
+        <item name="colorTextSecondary">@color/dark_text_secondary</item>
+        <item name="colorTextHint">@color/dark_text_hint</item>
+        <item name="colorTextOnCard">@color/dark_text_on_card</item>
+
+        <!-- Stroke input -->
+        <item name="colorInputStroke">@color/dark_input_stroke</item>
     </style>
+
+    <!-- TextInputLayout dark — hint tetap biru, stroke lebih terang -->
+    <style name="Widget.Jadwalku.TextInputLayout.OutlinedBox"
+        parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/input_box_stroke</item>
+        <item name="hintTextColor">@color/brand_blue</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
+    </style>
+
 </resources>

@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Layout untuk LoginActivity.
+    Layout LoginActivity.
     Mendukung mode Login dan Register (toggle via tvToggleMode).
+    Warna menggunakan ?attr/ sehingga otomatis menyesuaikan light/dark mode.
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#FFFFFF">
+    android:background="?attr/colorBgSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,30 +22,25 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Jadwalku"
+            android:text="@string/login_title"
             android:textSize="32sp"
             android:textStyle="bold"
-            android:textColor="#000000"
+            android:textColor="?attr/colorTextPrimary"
             android:layout_marginBottom="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Halaman Login"
+            android:text="@string/login_subtitle"
             android:textSize="14sp"
-            android:textColor="#777777"
+            android:textColor="?attr/colorTextHint"
             android:layout_marginBottom="40dp" />
 
         <!-- Input Email -->
-        <!--
-            Style diambil dari theme (textInputStyle) sehingga tidak perlu
-            diulang di sini. boxStrokeColor & hintTextColor sudah diatur via
-            Widget.Jadwalku.TextInputLayout.OutlinedBox di themes.xml.
-        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
+            android:hint="@string/login_hint_email"
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -56,14 +52,10 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Input Password -->
-        <!--
-            app:endIconMode="password_toggle" adalah pengganti
-            app:passwordToggleEnabled yang sudah deprecated.
-        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password"
+            android:hint="@string/login_hint_password"
             app:endIconMode="password_toggle"
             android:layout_marginBottom="24dp">
 
@@ -80,19 +72,19 @@
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Masuk"
+            android:text="@string/login_btn_masuk"
             android:textSize="16sp"
-            android:backgroundTint="#1A73E8"
+            android:backgroundTint="@color/brand_blue"
             android:layout_marginBottom="12dp" />
 
-        <!-- Tombol Daftar (awalnya GONE, muncul saat mode register) -->
+        <!-- Tombol Daftar (awalnya GONE) -->
         <Button
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Daftar Akun Baru"
+            android:text="@string/login_btn_daftar"
             android:textSize="16sp"
-            android:backgroundTint="#34A853"
+            android:backgroundTint="@color/brand_green"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
 
@@ -101,9 +93,9 @@
             android:id="@+id/tvToggleMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Belum punya akun? Daftar di sini"
+            android:text="@string/login_toggle_to_register"
             android:textSize="14sp"
-            android:textColor="#1A73E8"
+            android:textColor="@color/brand_blue"
             android:padding="8dp"
             android:layout_marginBottom="16dp" />
 

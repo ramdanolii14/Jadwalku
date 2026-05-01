@@ -1,31 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/values/themes.xml  →  MODE TERANG (Light)
+    Pasangan dark-nya ada di res/values-night/themes.xml
+-->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
     <style name="Theme.Jadwalku" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color (diubah ke biru agar outline fokus terlihat) -->
+
+        <!-- Brand color -->
         <item name="colorPrimary">@color/brand_blue</item>
         <item name="colorPrimaryVariant">@color/brand_blue_dark</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
         <item name="colorSecondary">#EEEEEE</item>
         <item name="colorSecondaryVariant">#DDDDDD</item>
         <item name="colorOnSecondary">#000000</item>
-        <!-- Status bar tetap putih -->
-        <item name="android:statusBarColor">#FFFFFF</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/light_bg_surface</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-        <!-- Control colors: default abu-abu, fokus/aktif biru -->
+
+        <!-- Input control colors -->
         <item name="colorControlNormal">@color/input_stroke_default</item>
         <item name="colorControlActivated">@color/brand_blue</item>
         <item name="colorControlHighlight">@color/brand_blue</item>
-        <!-- Terapkan custom style ke semua TextInputLayout di app -->
         <item name="textInputStyle">@style/Widget.Jadwalku.TextInputLayout.OutlinedBox</item>
+
+        <!-- ── Custom semantic color attributes ── -->
+        <!-- Background -->
+        <item name="colorBgScreen">@color/light_bg_screen</item>
+        <item name="colorBgSurface">@color/light_bg_surface</item>
+        <item name="colorBgCard">@color/light_bg_card</item>
+        <item name="colorBgInput">@color/light_bg_input</item>
+
+        <!-- Text -->
+        <item name="colorTextPrimary">@color/light_text_primary</item>
+        <item name="colorTextSecondary">@color/light_text_secondary</item>
+        <item name="colorTextHint">@color/light_text_hint</item>
+        <item name="colorTextOnCard">@color/light_text_on_card</item>
+
+        <!-- Stroke input -->
+        <item name="colorInputStroke">@color/light_input_stroke</item>
     </style>
 
-    <!--
-        Custom OutlinedBox style:
-        - boxStrokeColor  : abu-abu saat normal, biru saat fokus, merah saat error
-        - hintTextColor   : biru saat fokus (label mengapung di atas field)
-        - boxCornerRadius : sudut sedikit membulat agar lebih modern
-    -->
+    <!-- TextInputLayout custom style -->
     <style name="Widget.Jadwalku.TextInputLayout.OutlinedBox"
         parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/input_box_stroke</item>
@@ -35,4 +52,5 @@
         <item name="boxCornerRadiusBottomStart">8dp</item>
         <item name="boxCornerRadiusBottomEnd">8dp</item>
     </style>
+
 </resources>
