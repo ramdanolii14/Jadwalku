@@ -8,8 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.Gravity
 import android.widget.Button
 import android.widget.EditText
@@ -27,10 +29,16 @@ class PengingatActivity : AppCompatActivity() {
 
     private lateinit var container: LinearLayout
 
+    // ── Ambil warna dari theme aktif (otomatis light/dark) ──────────────────
+    private fun themeColor(attrRes: Int): Int {
+        val tv = TypedValue()
+        theme.resolveAttribute(attrRes, tv, true)
+        return tv.data
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pengingat)
-
         container = findViewById(R.id.containerPengingat)
         refreshData()
     }
@@ -42,17 +50,12 @@ class PengingatActivity : AppCompatActivity() {
         val batasKedaluwarsa = 3 * 60 * 60 * 1000L
         val batasHapus       = 48 * 60 * 60 * 1000L
 
-        // ── Jadwal dari Firestore ──
         FirestoreHelper.getJadwal { listJadwal ->
             val filtered = listJadwal.mapNotNull { item ->
                 val eventTime = getTimestamp(item.tanggal, item.waktuMulai)
                 if (eventTime == 0L) return@mapNotNull item to "AKTIF"
-
                 val selisih = currentTime - eventTime
-                if (selisih > batasHapus) {
-                    FirestoreHelper.deleteJadwal(item.id)
-                    return@mapNotNull null
-                }
+                if (selisih > batasHapus) { FirestoreHelper.deleteJadwal(item.id); return@mapNotNull null }
                 val status = when {
                     selisih > batasKedaluwarsa -> "KEDALUWARSA"
                     currentTime < eventTime    -> "AKTIF"
@@ -60,28 +63,20 @@ class PengingatActivity : AppCompatActivity() {
                 }
                 item to status
             }
-
             runOnUiThread {
                 if (filtered.isNotEmpty()) {
                     buatSectionHeader("📅  Jadwal Kegiatan")
-                    filtered.forEach { (item, status) ->
-                        buatKartuJadwal(item, status)
-                    }
+                    filtered.forEach { (item, status) -> buatKartuJadwal(item, status) }
                 }
             }
         }
 
-        // ── Tugas dari Firestore ──
         FirestoreHelper.getTugas { listTugas ->
             val filtered = listTugas.mapNotNull { item ->
                 val deadlineTime = getTimestamp(item.tanggalDeadline, item.waktuDeadline)
                 if (deadlineTime == 0L) return@mapNotNull item to "AKTIF"
-
                 val selisih = currentTime - deadlineTime
-                if (selisih > batasHapus) {
-                    FirestoreHelper.deleteTugas(item.id)
-                    return@mapNotNull null
-                }
+                if (selisih > batasHapus) { FirestoreHelper.deleteTugas(item.id); return@mapNotNull null }
                 val status = when {
                     selisih > batasKedaluwarsa -> "KEDALUWARSA"
                     currentTime < deadlineTime -> "AKTIF"
@@ -89,13 +84,10 @@ class PengingatActivity : AppCompatActivity() {
                 }
                 item to status
             }
-
             runOnUiThread {
                 if (filtered.isNotEmpty()) {
                     buatSectionHeader("📝  Tugas")
-                    filtered.forEach { (item, status) ->
-                        buatKartuTugas(item, status)
-                    }
+                    filtered.forEach { (item, status) -> buatKartuTugas(item, status) }
                 }
                 if (container.childCount == 0) tampilkanKosong()
             }
@@ -105,6 +97,9 @@ class PengingatActivity : AppCompatActivity() {
     // ─────────────────── DIALOG EDIT JADWAL ───────────────────
 
     private fun tampilkanDialogEditJadwal(item: JadwalItem) {
+        val colorTextPrimary = themeColor(R.attr.colorTextPrimary)
+        val colorBgInput     = themeColor(R.attr.colorBgInput)
+
         val dialogLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(48, 32, 48, 16)
@@ -112,41 +107,43 @@ class PengingatActivity : AppCompatActivity() {
 
         fun buatLabel(teks: String): TextView = TextView(this).apply {
             text = teks; textSize = 13f; setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#333333"))
+            setTextColor(colorTextPrimary)
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             p.setMargins(0, 12.dp, 0, 4.dp); layoutParams = p
         }
 
         fun buatInput(nilai: String, focusable: Boolean = true): EditText = EditText(this).apply {
             setText(nilai); textSize = 14f
-            setTextColor(Color.parseColor("#111111"))
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(Color.parseColor("#EEEEEE")); cornerRadius = 8f.dp
+            setTextColor(colorTextPrimary)
+            // Background input ikut tema
+            background = GradientDrawable().apply {
+                setColor(colorBgInput); cornerRadius = 8f.dp
             }
             isFocusable = focusable; isFocusableInTouchMode = focusable
             setPadding(16.dp, 12.dp, 16.dp, 12.dp)
         }
 
-        val etNama        = buatInput(item.namaKegiatan)
-        val etTanggal     = buatInput(item.tanggal, focusable = false)
-        val etWaktuMulai  = buatInput(item.waktuMulai, focusable = false)
-        val etWaktuSelesai= buatInput(item.waktuSelesai, focusable = false)
+        val etNama         = buatInput(item.namaKegiatan)
+        val etTanggal      = buatInput(item.tanggal, focusable = false)
+        val etWaktuMulai   = buatInput(item.waktuMulai, focusable = false)
+        val etWaktuSelesai = buatInput(item.waktuSelesai, focusable = false)
 
+        // ✅ FIX: hapus argumen style → dialog ikut tema sistem (light/dark otomatis)
         etTanggal.setOnClickListener {
             val cal = Calendar.getInstance()
-            DatePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, y, m, d ->
+            DatePickerDialog(this, { _, y, m, d ->
                 etTanggal.setText("$d/${m + 1}/$y")
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
         etWaktuMulai.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, h, min ->
+            TimePickerDialog(this, { _, h, min ->
                 etWaktuMulai.setText(String.format("%02d:%02d", h, min))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
         etWaktuSelesai.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, h, min ->
+            TimePickerDialog(this, { _, h, min ->
                 etWaktuSelesai.setText(String.format("%02d:%02d", h, min))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
@@ -160,9 +157,9 @@ class PengingatActivity : AppCompatActivity() {
             .setTitle("Edit Jadwal")
             .setView(dialogLayout)
             .setPositiveButton("Simpan") { _, _ ->
-                val nama       = etNama.text.toString().trim()
-                val tanggal    = etTanggal.text.toString().trim()
-                val waktuMulai = etWaktuMulai.text.toString().trim()
+                val nama         = etNama.text.toString().trim()
+                val tanggal      = etTanggal.text.toString().trim()
+                val waktuMulai   = etWaktuMulai.text.toString().trim()
                 val waktuSelesai = etWaktuSelesai.text.toString().trim()
 
                 if (nama.isEmpty() || tanggal.isEmpty() || waktuMulai.isEmpty() || waktuSelesai.isEmpty()) {
@@ -173,7 +170,6 @@ class PengingatActivity : AppCompatActivity() {
                 FirestoreHelper.updateJadwal(item.id, nama, tanggal, waktuMulai, waktuSelesai) { success ->
                     runOnUiThread {
                         if (success) {
-                            // Batalkan alarm lama lalu jadwalkan ulang dengan data baru
                             cancelAlarm(item.id)
                             scheduleJadwalAlarms(item.id, nama, tanggal, waktuMulai)
                             Toast.makeText(this, "Jadwal berhasil diperbarui.", Toast.LENGTH_SHORT).show()
@@ -191,6 +187,9 @@ class PengingatActivity : AppCompatActivity() {
     // ─────────────────── DIALOG EDIT TUGAS ───────────────────
 
     private fun tampilkanDialogEditTugas(item: TugasItem) {
+        val colorTextPrimary = themeColor(R.attr.colorTextPrimary)
+        val colorBgInput     = themeColor(R.attr.colorBgInput)
+
         val dialogLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(48, 32, 48, 16)
@@ -198,16 +197,16 @@ class PengingatActivity : AppCompatActivity() {
 
         fun buatLabel(teks: String): TextView = TextView(this).apply {
             text = teks; textSize = 13f; setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#333333"))
+            setTextColor(colorTextPrimary)
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             p.setMargins(0, 12.dp, 0, 4.dp); layoutParams = p
         }
 
         fun buatInput(nilai: String, focusable: Boolean = true): EditText = EditText(this).apply {
             setText(nilai); textSize = 14f
-            setTextColor(Color.parseColor("#111111"))
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(Color.parseColor("#EEEEEE")); cornerRadius = 8f.dp
+            setTextColor(colorTextPrimary)
+            background = GradientDrawable().apply {
+                setColor(colorBgInput); cornerRadius = 8f.dp
             }
             isFocusable = focusable; isFocusableInTouchMode = focusable
             setPadding(16.dp, 12.dp, 16.dp, 12.dp)
@@ -218,23 +217,24 @@ class PengingatActivity : AppCompatActivity() {
         val etTanggal   = buatInput(item.tanggalDeadline, focusable = false)
         val etWaktu     = buatInput(item.waktuDeadline, focusable = false)
 
+        // ✅ FIX: hapus argumen style → dialog ikut tema sistem (light/dark otomatis)
         etTanggal.setOnClickListener {
             val cal = Calendar.getInstance()
-            DatePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, y, m, d ->
+            DatePickerDialog(this, { _, y, m, d ->
                 etTanggal.setText("$d/${m + 1}/$y")
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
         etWaktu.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, h, min ->
+            TimePickerDialog(this, { _, h, min ->
                 etWaktu.setText(String.format("%02d:%02d", h, min))
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
 
-        dialogLayout.addView(buatLabel("Judul Tugas"));    dialogLayout.addView(etJudul)
-        dialogLayout.addView(buatLabel("Deskripsi"));      dialogLayout.addView(etDeskripsi)
+        dialogLayout.addView(buatLabel("Judul Tugas"));     dialogLayout.addView(etJudul)
+        dialogLayout.addView(buatLabel("Deskripsi"));       dialogLayout.addView(etDeskripsi)
         dialogLayout.addView(buatLabel("Tanggal Deadline")); dialogLayout.addView(etTanggal)
-        dialogLayout.addView(buatLabel("Waktu Deadline")); dialogLayout.addView(etWaktu)
+        dialogLayout.addView(buatLabel("Waktu Deadline"));  dialogLayout.addView(etWaktu)
 
         AlertDialog.Builder(this)
             .setTitle("Edit Tugas")
@@ -269,54 +269,27 @@ class PengingatActivity : AppCompatActivity() {
 
     // ─────────────────── ALARM HELPERS ───────────────────
 
-    /**
-     * Jadwalkan 4 alarm lokal untuk jadwal:
-     * 2 jam, 1 jam, 5 menit, 3 menit sebelum mulai.
-     */
     private fun scheduleJadwalAlarms(docId: String, nama: String, tanggal: String, waktuMulai: String) {
         val eventMs = getTimestamp(tanggal, waktuMulai)
-        val offsets = listOf(
-            2 * 60 * 60 * 1000L to "2 jam",
-            60 * 60 * 1000L     to "1 jam",
-            5 * 60 * 1000L      to "5 menit",
-            3 * 60 * 1000L      to "3 menit"
-        )
-        offsets.forEachIndexed { index, (offset, label) ->
-            val triggerAt = eventMs - offset
-            if (triggerAt > System.currentTimeMillis()) {
-                scheduleOneAlarm(
-                    docId       = "${docId}_j$index",
-                    title       = "Jadwal Segera Dimulai",
-                    message     = "$nama akan dimulai $label lagi.",
-                    triggerAt   = triggerAt
-                )
+        listOf(2 * 60 * 60 * 1000L to "2 jam", 60 * 60 * 1000L to "1 jam",
+            5 * 60 * 1000L to "5 menit", 3 * 60 * 1000L to "3 menit")
+            .forEachIndexed { index, (offset, label) ->
+                val triggerAt = eventMs - offset
+                if (triggerAt > System.currentTimeMillis())
+                    scheduleOneAlarm("${docId}_j$index", "Jadwal Segera Dimulai", "$nama akan dimulai $label lagi.", triggerAt)
             }
-        }
     }
 
-    /**
-     * Jadwalkan 4 alarm lokal untuk tugas:
-     * 2 jam, 1 jam, 5 menit, 3 menit sebelum deadline.
-     */
     private fun scheduleTugasAlarms(docId: String, judul: String, tanggal: String, waktu: String) {
         val deadlineMs = getTimestamp(tanggal, waktu)
-        val offsets = listOf(
-            2 * 60 * 60 * 1000L to "2 jam",
-            60 * 60 * 1000L     to "1 jam",
-            5 * 60 * 1000L      to "5 menit",
-            3 * 60 * 1000L      to "3 menit"
-        )
-        offsets.forEachIndexed { index, (offset, label) ->
-            val triggerAt = deadlineMs - offset
-            if (triggerAt > System.currentTimeMillis()) {
-                scheduleOneAlarm(
-                    docId     = "${docId}_t$index",
-                    title     = "Deadline Tugas Mendekat!",
-                    message   = "Tugas '$judul' deadline $tanggal pukul $waktu (sisa ~$label).",
-                    triggerAt = triggerAt
-                )
+        listOf(2 * 60 * 60 * 1000L to "2 jam", 60 * 60 * 1000L to "1 jam",
+            5 * 60 * 1000L to "5 menit", 3 * 60 * 1000L to "3 menit")
+            .forEachIndexed { index, (offset, label) ->
+                val triggerAt = deadlineMs - offset
+                if (triggerAt > System.currentTimeMillis())
+                    scheduleOneAlarm("${docId}_t$index", "Deadline Tugas Mendekat!",
+                        "Tugas '$judul' deadline $tanggal pukul $waktu (sisa ~$label).", triggerAt)
             }
-        }
     }
 
     private fun scheduleOneAlarm(docId: String, title: String, message: String, triggerAt: Long) {
@@ -328,26 +301,21 @@ class PengingatActivity : AppCompatActivity() {
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val pending = PendingIntent.getBroadcast(this, docId.hashCode(), intent, flags)
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-        } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-        }
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+        else
+            am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
     }
 
-    /** Batalkan semua 4 alarm (j0–j3 atau t0–t3) untuk satu item. */
     private fun cancelAlarm(docId: String) {
-        val suffixes = listOf("_j0","_j1","_j2","_j3","_t0","_t1","_t2","_t3")
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        suffixes.forEach { suffix ->
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        listOf("_j0","_j1","_j2","_j3","_t0","_t1","_t2","_t3").forEach { suffix ->
             val id = "$docId$suffix"
-            val intent = Intent(this, AlarmReceiver::class.java)
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-            val pending = PendingIntent.getBroadcast(this, id.hashCode(), intent, flags)
-            alarmManager.cancel(pending)
+            val pending = PendingIntent.getBroadcast(this, id.hashCode(), Intent(this, AlarmReceiver::class.java), flags)
+            am.cancel(pending)
         }
     }
 
@@ -357,7 +325,7 @@ class PengingatActivity : AppCompatActivity() {
         val tv = TextView(this)
         tv.text = "Tidak ada pengingat aktif saat ini."
         tv.textSize = 14f
-        tv.setTextColor(Color.parseColor("#888888"))
+        tv.setTextColor(themeColor(R.attr.colorTextSecondary))
         tv.gravity = Gravity.CENTER
         val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         p.setMargins(0, 64.dp, 0, 0)
@@ -365,19 +333,12 @@ class PengingatActivity : AppCompatActivity() {
         container.addView(tv)
     }
 
-    private fun getTimestamp(tanggal: String, waktu: String): Long {
-        return try {
-            val sdf = SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault())
-            sdf.parse("$tanggal $waktu")?.time ?: 0L
-        } catch (e: Exception) { 0L }
-    }
-
     private fun buatSectionHeader(judul: String) {
         val tv = TextView(this)
         tv.text = judul
         tv.textSize = 15f
         tv.setTypeface(null, Typeface.BOLD)
-        tv.setTextColor(Color.parseColor("#333333"))
+        tv.setTextColor(themeColor(R.attr.colorTextPrimary))
         val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         p.setMargins(0, 8.dp, 0, 8.dp)
         tv.layoutParams = p
@@ -388,7 +349,13 @@ class PengingatActivity : AppCompatActivity() {
         val isExpired     = status == "KEDALUWARSA"
         val isBerlangsung = status == "BERLANGSUNG"
 
-        val bgColor    = when { isExpired -> "#FFF3F3"; isBerlangsung -> "#F0FFF4"; else -> "#F5F5F5" }
+        // Warna kartu: status khusus tetap pakai warna semantik,
+        // status normal (AKTIF) ikut tema agar tidak bocor di dark mode
+        val bgColor    = when {
+            isExpired     -> if (isDarkMode()) "#4D1A1A" else "#FFF3F3"
+            isBerlangsung -> if (isDarkMode()) "#1A3D2B" else "#F0FFF4"
+            else          -> null  // pakai colorBgCard dari tema
+        }
         val badgeColor = when { isExpired -> "#FF4444"; isBerlangsung -> "#00AA55"; else -> "#4488FF" }
         val badgeText  = when { isExpired -> "Kedaluwarsa"; isBerlangsung -> "Berlangsung"; else -> "Mendatang" }
 
@@ -398,7 +365,7 @@ class PengingatActivity : AppCompatActivity() {
         val barisTas = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val tvNama   = TextView(this).apply {
             text = item.namaKegiatan; textSize = 16f; setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#222222"))
+            setTextColor(themeColor(R.attr.colorTextPrimary))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
         barisTas.addView(tvNama)
@@ -406,17 +373,13 @@ class PengingatActivity : AppCompatActivity() {
 
         val tvDetail = TextView(this).apply {
             text = "📅 ${item.tanggal}   🕐 ${item.waktuMulai} – ${item.waktuSelesai}"
-            textSize = 13f; setTextColor(Color.parseColor("#666666"))
+            textSize = 13f
+            setTextColor(themeColor(R.attr.colorTextSecondary))
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             p.setMargins(0, 6.dp, 0, 0); layoutParams = p
         }
 
-        // Baris tombol Edit & Hapus
-        val barisBtn = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END
-            val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 4.dp, 0, 0); layoutParams = p
-        }
+        val barisBtn = buatBarisBtn()
         val btnEdit  = buatTombolEdit()
         val btnHapus = buatTombolHapus()
 
@@ -424,11 +387,8 @@ class PengingatActivity : AppCompatActivity() {
         btnHapus.setOnClickListener {
             FirestoreHelper.deleteJadwal(item.id) { success ->
                 runOnUiThread {
-                    if (success) {
-                        cancelAlarm(item.id)
-                        refreshData()
-                        Toast.makeText(this, "Jadwal berhasil dihapus.", Toast.LENGTH_SHORT).show()
-                    }
+                    if (success) { cancelAlarm(item.id); refreshData()
+                        Toast.makeText(this, "Jadwal berhasil dihapus.", Toast.LENGTH_SHORT).show() }
                 }
             }
         }
@@ -442,7 +402,11 @@ class PengingatActivity : AppCompatActivity() {
         val isExpired   = status == "KEDALUWARSA"
         val isMendekati = status == "MENDEKATI"
 
-        val bgColor    = when { isExpired -> "#FFF3F3"; isMendekati -> "#FFFBF0"; else -> "#F5F5F5" }
+        val bgColor    = when {
+            isExpired   -> if (isDarkMode()) "#4D1A1A" else "#FFF3F3"
+            isMendekati -> if (isDarkMode()) "#3D2E00" else "#FFFBF0"
+            else        -> null
+        }
         val badgeColor = when { isExpired -> "#FF4444"; isMendekati -> "#FF8800"; else -> "#4488FF" }
         val badgeText  = when { isExpired -> "Kedaluwarsa"; isMendekati -> "Segera!"; else -> "Aktif" }
 
@@ -452,30 +416,27 @@ class PengingatActivity : AppCompatActivity() {
         val barisTas = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val tvJudul  = TextView(this).apply {
             text = item.judul; textSize = 16f; setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#222222"))
+            setTextColor(themeColor(R.attr.colorTextPrimary))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
         barisTas.addView(tvJudul)
         barisTas.addView(buatBadge(badgeText, badgeColor))
 
         val tvDeskripsi = TextView(this).apply {
-            text = item.deskripsi; textSize = 13f; setTextColor(Color.parseColor("#555555"))
+            text = item.deskripsi; textSize = 13f
+            setTextColor(themeColor(R.attr.colorTextSecondary))
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             p.setMargins(0, 4.dp, 0, 0); layoutParams = p
         }
         val tvDeadline = TextView(this).apply {
             text = "⏰ Deadline: ${item.tanggalDeadline} pukul ${item.waktuDeadline}"
             textSize = 13f
-            setTextColor(if (isExpired) Color.parseColor("#CC0000") else Color.parseColor("#666666"))
+            setTextColor(if (isExpired) Color.parseColor("#CC0000") else themeColor(R.attr.colorTextSecondary))
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             p.setMargins(0, 6.dp, 0, 0); layoutParams = p
         }
 
-        val barisBtn = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END
-            val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 4.dp, 0, 0); layoutParams = p
-        }
+        val barisBtn = buatBarisBtn()
         val btnEdit  = buatTombolEdit()
         val btnHapus = buatTombolHapus()
 
@@ -483,11 +444,8 @@ class PengingatActivity : AppCompatActivity() {
         btnHapus.setOnClickListener {
             FirestoreHelper.deleteTugas(item.id) { success ->
                 runOnUiThread {
-                    if (success) {
-                        cancelAlarm(item.id)
-                        refreshData()
-                        Toast.makeText(this, "Tugas berhasil dihapus.", Toast.LENGTH_SHORT).show()
-                    }
+                    if (success) { cancelAlarm(item.id); refreshData()
+                        Toast.makeText(this, "Tugas berhasil dihapus.", Toast.LENGTH_SHORT).show() }
                 }
             }
         }
@@ -497,21 +455,38 @@ class PengingatActivity : AppCompatActivity() {
         card.addView(inner); container.addView(card)
     }
 
-    private fun buatCardBase(bgColorHex: String): CardView {
+    // ── Helper: apakah device sedang di dark mode? ───────────────────────────
+    private fun isDarkMode(): Boolean {
+        val nightMode = resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK
+        return nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }
+
+    private fun buatCardBase(bgColorHex: String?): CardView {
         val card = CardView(this)
         val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         p.setMargins(0, 0, 0, 12.dp)
         card.layoutParams = p
-        card.setCardBackgroundColor(Color.parseColor(bgColorHex))
+        // null = pakai colorBgCard dari tema (untuk kartu status normal/AKTIF)
+        card.setCardBackgroundColor(
+            if (bgColorHex != null) Color.parseColor(bgColorHex)
+            else themeColor(R.attr.colorBgCard)
+        )
         card.cardElevation = 2f.dp
         return card
+    }
+
+    private fun buatBarisBtn(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END
+        val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        p.setMargins(0, 4.dp, 0, 0); layoutParams = p
     }
 
     private fun buatBadge(text: String, colorHex: String): TextView {
         return TextView(this).apply {
             this.text = text; textSize = 11f; setTypeface(null, Typeface.BOLD)
             setTextColor(Color.WHITE)
-            background = android.graphics.drawable.GradientDrawable().apply {
+            background = GradientDrawable().apply {
                 setColor(Color.parseColor(colorHex)); cornerRadius = 20f.dp
             }
             setPadding(10.dp, 4.dp, 10.dp, 4.dp)
@@ -521,7 +496,7 @@ class PengingatActivity : AppCompatActivity() {
     private fun buatTombolEdit(): Button {
         return Button(this).apply {
             text = "Edit"; textSize = 12f
-            setTextColor(Color.parseColor("#444444"))
+            setTextColor(themeColor(R.attr.colorTextOnCard))
             setBackgroundColor(Color.TRANSPARENT)
             val p = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             p.setMargins(0, 0, 8.dp, 0); layoutParams = p
@@ -535,6 +510,12 @@ class PengingatActivity : AppCompatActivity() {
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         }
+    }
+
+    private fun getTimestamp(tanggal: String, waktu: String): Long {
+        return try {
+            SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault()).parse("$tanggal $waktu")?.time ?: 0L
+        } catch (e: Exception) { 0L }
     }
 
     private val Int.dp: Int     get() = (this * resources.displayMetrics.density).toInt()

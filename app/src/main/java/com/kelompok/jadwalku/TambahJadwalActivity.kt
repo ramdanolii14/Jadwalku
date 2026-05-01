@@ -33,23 +33,42 @@ class TambahJadwalActivity : AppCompatActivity() {
 
         etTanggal.setOnClickListener {
             val cal = Calendar.getInstance()
-            DatePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, year, month, day ->
-                etTanggal.setText("$day/${month + 1}/$year")
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            // Tanpa style argument → dialog ikut tema sistem (light/dark otomatis)
+            DatePickerDialog(
+                this,
+                { _, year, month, day ->
+                    etTanggal.setText("$day/${month + 1}/$year")
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
 
         etWaktuMulai.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, hour, minute ->
-                etWaktuMulai.setText(String.format("%02d:%02d", hour, minute))
-            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+            TimePickerDialog(
+                this,
+                { _, hour, minute ->
+                    etWaktuMulai.setText(String.format("%02d:%02d", hour, minute))
+                },
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                true
+            ).show()
         }
 
         etWaktuSelesai.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(this, android.R.style.Theme_Material_Light_Dialog, { _, hour, minute ->
-                etWaktuSelesai.setText(String.format("%02d:%02d", hour, minute))
-            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+            TimePickerDialog(
+                this,
+                { _, hour, minute ->
+                    etWaktuSelesai.setText(String.format("%02d:%02d", hour, minute))
+                },
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                true
+            ).show()
         }
 
         btnSimpan.setOnClickListener {
@@ -59,7 +78,7 @@ class TambahJadwalActivity : AppCompatActivity() {
             val waktuSelesai = etWaktuSelesai.text.toString().trim()
 
             if (nama.isEmpty() || tanggal.isEmpty() || waktuMulai.isEmpty() || waktuSelesai.isEmpty()) {
-                Toast.makeText(this, "Semua data harus diisi", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.jadwal_toast_kosong), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -73,22 +92,17 @@ class TambahJadwalActivity : AppCompatActivity() {
 
                     if (success && docId != null) {
                         scheduleJadwalAlarms(docId, nama, tanggal, waktuMulai)
-                        Toast.makeText(this, "Jadwal berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.jadwal_toast_berhasil), Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this, "Gagal menyimpan jadwal.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.jadwal_toast_gagal), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
     }
 
-    /**
-     * Menjadwalkan 4 alarm lokal sebelum jadwal mulai:
-     * 2 jam, 1 jam, 5 menit, dan 3 menit sebelumnya.
-     * Alarm ini bersifat lokal — aktif meski tidak ada koneksi internet.
-     */
     private fun scheduleJadwalAlarms(docId: String, nama: String, tanggal: String, waktuMulai: String) {
         val eventMs = parseDateTime(tanggal, waktuMulai)
         val offsets = listOf(
@@ -102,7 +116,7 @@ class TambahJadwalActivity : AppCompatActivity() {
             if (triggerAt > System.currentTimeMillis()) {
                 scheduleOneAlarm(
                     docId     = "${docId}_j$index",
-                    title     = "Jadwal Segera Dimulai",
+                    title     = getString(R.string.alarm_jadwal_title),
                     message   = "$nama akan dimulai $label lagi.",
                     triggerAt = triggerAt
                 )
